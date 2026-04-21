@@ -1,0 +1,37 @@
+#Bài 8
+import osmnx as ox
+import folium
+import random
+import numpy as np
+location = (10.7769, 106.7009)
+G = ox.graph_from_point(location, dist=1000, network_type='drive')
+G_projected = ox.project_graph(G)
+nodes = list(G_projected.nodes())
+customer_node = random.choice(nodes)
+driver_nodes = random.sample(nodes, 3)
+best_driver_node = None
+min_dist = float('inf')
+best_route = None
+for d_node in driver_nodes:
+    try:
+        route = ox.shortest_path(G_projected, d_node, customer_node, weight='length')
+        route_length = sum(ox.routing.route_to_gdf(G_projected, route)['length'])
+        if route_length < min_dist:
+            min_dist = route_length
+            best_driver_node = d_node
+            best_route = route
+    except:
+        continue
+m = folium.Map(location=location, zoom_start=16)
+c_lat, c_lon = G.nodes[customer_node]['y'], G.nodes[customer_node]['x']
+folium.Marker([c_lat, c_lon], popup="Khách hàng", icon=folium.Icon(color='blue', icon='user')).add_to(m)
+for d_node in driver_nodes:
+    d_lat, d_lon = G.nodes[d_node]['y'], G.nodes[d_node]['x']
+    color = 'green' if d_node == best_driver_node else 'red'
+    status = "Tài xế được chọn" if d_node == best_driver_node else "Tài xế rảnh"
+    folium.Marker([d_lat, d_lon], popup=status, icon=folium.Icon(color=color, icon='car')).add_to(m)
+if best_route:
+    route_gdf = ox.routing.route_to_gdf(G_projected, best_route)
+    folium.GeoJson(route_gdf).add_to(m)
+print(f"Khoảng cách đón khách gần nhất: {min_dist:.2f} mét")
+m
