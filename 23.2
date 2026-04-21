@@ -1,0 +1,30 @@
+#Bài 2
+import folium
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+
+geolocator = Nominatim(user_agent="distance")
+center_address = "UEH"
+
+location_center = geolocator.geocode(center_address)
+
+lat_root, lon_root = location_center.latitude, location_center.longitude
+
+addresses = [
+    "Dinh Độc Lập",
+    "Chợ Bến Thành, Quận 1",
+    "Bưu điện Trung tâm Sài Gòn",
+    "Landmark 81, Bình Thạnh",
+    "Hồ Con Rùa",
+    "Đầm Sen",
+    "Bưu điện Trung tâm TP.HCM"]
+m2 = folium.Map(location=[lat_root, lon_root], zoom_start=14)
+folium.Marker([lat_root, lon_root], popup="GỐC", icon=folium.Icon(color='red')).add_to(m2)
+for addr in addresses:
+    loc = geolocator.geocode(addr)
+    current_coords = (loc.latitude, loc.longitude)
+    dist = geodesic((lat_root, lon_root), current_coords).km
+    folium.Marker(
+            location=[loc.latitude, loc.longitude],
+            popup=f"{addr}: {dist:.2f} km").add_to(m2)
+m2
