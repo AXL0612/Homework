@@ -1,0 +1,20 @@
+#Bài 10
+import folium
+from folium.plugins import HeatMap
+center = [10.7715, 106.6925]
+m = folium.Map(location=center, zoom_start=15)
+congestion_data = [
+    [10.7715, 106.6925, 0.9],
+    [10.7745, 106.6945, 0.7],
+    [10.7700, 106.6910, 0.8],
+    [10.7730, 106.7000, 0.6]]
+HeatMap(congestion_data, radius=25, blur=15).add_to(m)
+route_coords = [
+    [10.7680, 106.6900],
+    [10.7685, 106.6950],
+    [10.7750, 106.7050]]
+folium.PolyLine(route_coords, color='green', weight=5, opacity=0.8,
+                tooltip="Tuyến đường đề xuất tránh tắc nghẽn").add_to(m)
+folium.Marker(route_coords[0], popup="Điểm đi", icon=folium.Icon(color='blue')).add_to(m)
+folium.Marker(route_coords[-1], popup="Điểm đến", icon=folium.Icon(color='green')).add_to(m)
+m
