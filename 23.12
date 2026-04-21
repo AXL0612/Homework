@@ -1,0 +1,22 @@
+#Bài 12
+import folium
+depots = {
+    'Kho A (Bến Thành)': [10.7725, 106.6980],
+    'Kho B (Hồ Con Rùa)': [10.7827, 106.6958]}
+points = [
+    [10.7750, 106.7010], [10.7710, 106.6950], [10.7800, 106.6930],
+    [10.7850, 106.6980], [10.7780, 106.6970], [10.7700, 106.7050]]
+m = folium.Map(location=[10.7770, 106.6970], zoom_start=15)
+colors = {'Kho A (Bến Thành)': 'blue', 'Kho B (Hồ Con Rùa)': 'red'}
+for name, coords in depots.items():
+    folium.Marker(coords, popup=name, icon=folium.Icon(color='black', icon='warehouse', prefix='fa')).add_to(m)
+    folium.Circle(
+        location=coords,
+        radius=600,
+        color=colors[name],
+        fill=True,
+        fill_opacity=0.2,
+        tooltip=f"Khu vực ưu tiên của {name}").add_to(m)
+for p in points:
+    folium.CircleMarker(p, radius=5, color='green', fill=True).add_to(m)
+m
