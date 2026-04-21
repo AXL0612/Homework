@@ -1,0 +1,25 @@
+#Bài 7
+import osmnx as ox
+import networkx as nx
+import matplotlib.pyplot as plt
+place_name = "District 3, Ho Chi Minh City, Vietnam"
+G = ox.graph_from_place(place_name, network_type='drive')
+G_projected = ox.project_graph(G)
+nodes = list(G_projected.nodes())
+orig_node = nodes[0]
+dest_node = nodes[-1]
+route_dijkstra = nx.shortest_path(G_projected, source=orig_node, target=dest_node, weight='length', method='dijkstra')
+def dist(u, v):
+    x1, y1 = G_projected.nodes[u]['x'], G_projected.nodes[u]['y']
+    x2, y2 = G_projected.nodes[v]['x'], G_projected.nodes[v]['y']
+    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+route_astar = nx.astar_path(G_projected, source=orig_node, target=dest_node, heuristic=dist, weight='length')
+def get_route_length(graph, route):
+    return sum(ox.routing.route_to_gdf(graph, route)['length'])
+len_dijkstra = get_route_length(G_projected, route_dijkstra)
+len_astar = get_route_length(G_projected, route_astar)
+print(f"Quãng đường Dijkstra: {len_dijkstra:.2f} mét")
+print(f"Quãng đường A*:       {len_astar:.2f} mét")
+fig, ax = ox.plot_graph_route(G_projected, route_dijkstra, route_color='y', route_linewidth=6, node_size=0, show=False, close=False)
+ox.plot_graph_route(G_projected, route_astar, route_color='r', route_linewidth=2, node_size=0, ax=ax)
+plt.show()
