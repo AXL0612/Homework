@@ -1,0 +1,16 @@
+#Bài 6
+import osmnx as ox
+import matplotlib.pyplot as plt
+place_name = "District 3, Ho Chi Minh City, Vietnam"
+G = ox.graph_from_place(place_name, network_type='drive')
+fig, ax = ox.plot_graph(G, node_size=5, node_color='red', edge_color='white', bgcolor='black')
+stats = ox.basic_stats(G)
+print(f"Số lượng nút giao (Nodes): {stats['n']}")
+print(f"Số lượng đoạn đường (Edges): {stats['m']}")
+print(f"Chiều dài đường trung bình: {stats['edge_length_avg']:.2f} mét")
+print(f"Tổng chiều dài mạng lưới: {stats['edge_length_total'] / 1000:.2f} km")
+node_density_km_value = stats.get('node_density_km', 'N/A')
+if node_density_km_value != 'N/A':
+    print(f"Mật độ nút giao: {node_density_km_value:.2f} nút/km2")
+else:
+    print(f"Mật độ nút giao: {node_density_km_value} nút/km2")
