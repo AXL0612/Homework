@@ -1,0 +1,32 @@
+#Bài 9
+import pandas as pd
+import folium
+from sklearn.cluster import KMeans
+data = {
+    "Customer": ["KH1","KH2","KH3","KH4","KH5","KH6","KH7","KH8"],
+    "Lat":[10.7769,10.7820,10.7600,10.7700,10.7550,10.8000,10.8100,10.7400],
+    "Lon":[106.7009,106.6950,106.6800,106.7100,106.6750,106.7200,106.7300,106.6600]}
+df = pd.DataFrame(data)
+df
+k = 3
+kmeans = KMeans(n_clusters=k, random_state=0)
+df["Cluster"] = kmeans.fit_predict(df[["Lat","Lon"]])
+centroids = kmeans.cluster_centers_
+df
+map_center = [df["Lat"].mean(), df["Lon"].mean()]
+m = folium.Map(location=map_center, zoom_start=12)
+colors = ["red","blue","green","purple","orange"]
+for i, row in df.iterrows():
+    folium.CircleMarker(
+        location=[row["Lat"], row["Lon"]],
+        radius=6,
+        color=colors[row["Cluster"]],
+        fill=True,
+        fill_color=colors[row["Cluster"]],
+        popup=row["Customer"]).add_to(m)
+for i, c in enumerate(centroids):
+    folium.Marker(
+        location=[c[0], c[1]],
+        icon=folium.Icon(color="black", icon="home"),
+        popup=f"Warehouse {i+1}").add_to(m)
+m
