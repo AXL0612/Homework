@@ -1,0 +1,9 @@
+#Bài 3
+import folium
+from folium.plugins import HeatMap
+import numpy as np
+base_lat, base_lon = 10.7769, 106.7009
+data = (np.random.normal(size=(100, 2)) * 0.02 + [base_lat, base_lon]).tolist()
+m = folium.Map(location=[base_lat, base_lon], zoom_start=13)
+HeatMap(data).add_to(m)
+m
