@@ -1,0 +1,25 @@
+#Bài 4
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+
+url_geo = "https://data.humdata.org/dataset/geoboundaries-admin-boundaries-for-viet-nam/resource/f5addec1-ac25-4748-973b-377935593fee/download/geoboundaries-vnm-adm1.geojson"
+gdf = gpd.read_file(url_geo)
+
+print("Cột trong GeoDataFrame:", gdf.columns.tolist())
+pop = pd.read_csv("vnm_admpop_adm1_2024.csv")
+print("Cột trong population DataFrame:", pop.columns.tolist())
+gdf = gdf.merge(pop, left_on='shapeName', right_on='ADM1_VI', how='left')
+fig, ax = plt.subplots(1, 1, figsize=(14, 10))
+gdf.plot(column='T_TL'
+         ax=ax,
+         legend=True,
+         cmap='OrRd',      
+         edgecolor='black',
+         linewidth=0.5,
+         legend_kwds={'label': "Tổng dân số năm 2024",
+                      'orientation': "horizontal",
+                      'shrink': 0.6})
+ax.set_title("Bản đồ Choropleth: Dân số theo tỉnh/thành phố Việt Nam (2024)", fontsize=16)
+ax.axis('off')
+plt.show()
