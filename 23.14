@@ -1,0 +1,32 @@
+#Bài 14
+import osmnx as ox
+import networkx as nx
+import folium
+location = [10.7769, 106.7009]
+G = ox.graph_from_point(location, dist=800, network_type='drive')
+G_projected = ox.project_graph(G)
+nodes = list(G_projected.nodes())
+orig, dest = nodes[0], nodes[-1]
+route = nx.shortest_path(G_projected, orig, dest, weight='length')
+route_coords = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route]
+m = folium.Map(location=location, zoom_start=16)
+folium.PolyLine(route_coords, color='gray', weight=3, opacity=0.5, tooltip="Lộ trình dự kiến").add_to(m)
+steps = [0, 0.25, 0.5, 0.75, 1.0]
+for i, progress in enumerate(steps):
+    idx = int(progress * (len(route_coords) - 1))
+    pos = route_coords[idx]
+    icon_color = 'orange'
+    status_text = f"T{i+1}: Đang di chuyển ({int(progress*100)}%)"
+    if progress == 0:
+        icon_color = 'blue'
+        status_text = "T1: Xuất phát"
+    elif progress == 1.0:
+        icon_color = 'green'
+        status_text = "T5: Đã hoàn thành"
+    folium.Marker(
+        location=pos,
+        popup=status_text,
+        tooltip=f"Thời điểm T{i+1}",
+        icon=folium.Icon(color=icon_color, icon='car', prefix='fa')).add_to(m)
+    folium.PolyLine(route_coords[:idx+1], color='blue', weight=5, opacity=0.8).add_to(m)
+m
