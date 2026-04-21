@@ -1,0 +1,32 @@
+#Bài 5
+import folium
+from geopy.distance import geodesic
+import pandas as pd
+
+center_point = (10.7769, 106.7009)
+df = pd.DataFrame({
+    'ID': ['A', 'B', 'C', 'D', 'E'],
+    'Lat': [10.785, 10.800, 10.750, 10.820, 10.700],
+    'Lon': [106.710, 106.730, 106.680, 106.750, 106.650]})
+m = folium.Map(location=center_point, zoom_start=12)
+
+folium.Circle(center_point, radius=10000, color='red', fill=True, fill_opacity=0.1).add_to(m)
+folium.Circle(center_point, radius=5000, color='orange', fill=True, fill_opacity=0.2).add_to(m)
+folium.Circle(center_point, radius=3000, color='green', fill=True, fill_opacity=0.3).add_to(m)
+
+data_array = df[['ID', 'Lat', 'Lon']].values
+
+for row in data_array:
+    cust_id = row[0]
+    lat = row[1]
+    lon = row[2]
+    dist = geodesic(center_point, (lat, lon)).km
+    color = 'gray'
+    if dist <= 3: color = 'green'
+    elif dist <= 10: color = 'blue'
+    folium.Marker(
+        location=[lat, lon],
+        popup=f"ID: {cust_id} - {dist:.1f}km",
+        icon=folium.Icon(color=color)).add_to(m)
+folium.Marker(center_point, icon=folium.Icon(color='black', icon='star')).add_to(m)
+m
