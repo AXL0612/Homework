@@ -1,0 +1,70 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+temperature = ctrl.Antecedent(np.arange(16, 36, 1), 'temperature')
+humidity    = ctrl.Antecedent(np.arange(0, 101, 1), 'humidity')
+people      = ctrl.Antecedent(np.arange(0, 11, 1),  'people')
+fan_speed     = ctrl.Consequent(np.arange(0, 101, 1), 'fan_speed')
+cooling_level = ctrl.Consequent(np.arange(0, 101, 1), 'cooling_level')
+
+temperature['cold']        = fuzz.trimf(temperature.universe, [16, 16, 22])
+temperature['cool']        = fuzz.trimf(temperature.universe, [18, 22, 26])
+temperature['comfortable'] = fuzz.trimf(temperature.universe, [24, 26, 28])
+temperature['warm']        = fuzz.trimf(temperature.universe, [26, 30, 34])
+temperature['hot']         = fuzz.trimf(temperature.universe, [32, 35, 35])
+humidity['low']    = fuzz.trimf(humidity.universe, [0,   0,  40])
+humidity['medium'] = fuzz.trimf(humidity.universe, [30, 50,  70])
+humidity['high']   = fuzz.trimf(humidity.universe, [60, 100, 100])
+people['few']      = fuzz.trimf(people.universe, [0, 0, 4])
+people['moderate'] = fuzz.trimf(people.universe, [3, 5, 7])
+people['many']     = fuzz.trimf(people.universe, [6, 10, 10])
+fan_speed['low']    = fuzz.trimf(fan_speed.universe, [0,   0,  40])
+fan_speed['medium'] = fuzz.trimf(fan_speed.universe, [30, 50,  70])
+fan_speed['high']   = fuzz.trimf(fan_speed.universe, [60, 100, 100])
+cooling_level['low']    = fuzz.trimf(cooling_level.universe, [0,   0,  40])
+cooling_level['medium'] = fuzz.trimf(cooling_level.universe, [30, 50,  70])
+cooling_level['high']   = fuzz.trimf(cooling_level.universe, [60, 100, 100])
+
+rules = [
+    ctrl.Rule(temperature['cold'],        fan_speed['low']),
+    ctrl.Rule(temperature['cool'],        fan_speed['low']),
+    ctrl.Rule(temperature['comfortable'], fan_speed['medium']),
+    ctrl.Rule(temperature['warm'],        fan_speed['high']),
+    ctrl.Rule(temperature['hot'],         fan_speed['high']),
+    ctrl.Rule(temperature['cold'],        cooling_level['low']),
+    ctrl.Rule(temperature['cool'],        cooling_level['low']),
+    ctrl.Rule(temperature['comfortable'], cooling_level['medium']),
+    ctrl.Rule(temperature['warm'],        cooling_level['high']),
+    ctrl.Rule(temperature['hot'],         cooling_level['high']),
+    ctrl.Rule(humidity['low'],    cooling_level['low']),
+    ctrl.Rule(humidity['medium'], cooling_level['medium']),
+    ctrl.Rule(humidity['high'],   cooling_level['high']),
+    ctrl.Rule(people['few'],      fan_speed['low']),
+    ctrl.Rule(people['moderate'], fan_speed['medium']),
+    ctrl.Rule(people['many'],     fan_speed['high']),
+    ctrl.Rule(temperature['hot']         & humidity['high']   & people['many'],
+              (cooling_level['high'],   fan_speed['high'])),
+    ctrl.Rule(temperature['comfortable'] & humidity['medium'] & people['moderate'],
+              (cooling_level['medium'], fan_speed['medium'])),
+    ctrl.Rule(temperature['cool']        & humidity['low']    & people['few'],
+              (cooling_level['low'],    fan_speed['low'])),]
+
+ac_ctrl = ctrl.ControlSystem(rules)
+ac_sim  = ctrl.ControlSystemSimulation(ac_ctrl)
+
+ac_sim.input['temperature'] = 30
+ac_sim.input['humidity']    = 60
+ac_sim.input['people']      = 5
+ac_sim.compute()
+print(f"  Đầu vào:")
+print(f"    • Nhiệt độ phòng   : 30 °C")
+print(f"    • Độ ẩm            : 60 %")
+print(f"    • Số người         : 5")
+print(f"  Kết quả:")
+print("toc do quat:  ", ac_sim.output["fan_speed"])
+print("muc do lam mat:", ac_sim.output['cooling_level'])
+fan_speed.view(sim=ac_sim)
+cooling_level.view(sim=ac_sim)
+plt.show()
