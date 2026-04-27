@@ -1,0 +1,60 @@
+import numpy as np
+import skfuzzy as fuzzy
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+demand = ctrl.Antecedent(np.arange(0, 101, 1), 'demand')
+pressure = ctrl.Antecedent(np.arange(0, 101, 1), 'pressure')
+reputation = ctrl.Antecedent(np.arange(1, 5.1, 0.1), 'reputation')
+margin = ctrl.Antecedent(np.arange(0, 101, 1), 'margin')
+seasonal = ctrl.Antecedent(np.arange(0, 11, 1), 'seasonal')
+discount = ctrl.Consequent(np.arange(0, 71, 1), 'discount')
+
+
+demand['low'] = fuzzy.trimf(demand.universe, [0, 0, 50])
+demand['medium'] = fuzzy.trimf(demand.universe, [20, 50, 80])
+demand['high'] = fuzzy.trimf(demand.universe, [50, 100, 100])
+
+pressure['low'] = fuzzy.trimf(pressure.universe, [0, 0, 50])
+pressure['medium'] = fuzzy.trimf(pressure.universe, [25, 50, 75])
+pressure['high'] = fuzzy.trimf(pressure.universe, [50, 100, 100])
+
+reputation['low'] = fuzzy.trimf(reputation.universe, [1, 1, 4.0])
+reputation['medium'] = fuzzy.trimf(reputation.universe, [3.8, 4.25, 4.6])
+reputation['high'] = fuzzy.trimf(reputation.universe, [4.4, 5, 5])
+
+margin['low'] = fuzzy.trimf(margin.universe, [0, 0, 40])
+margin['medium'] = fuzzy.trimf(margin.universe, [30, 55, 80])
+margin['high'] = fuzzy.trimf(margin.universe, [70, 100, 100])
+
+seasonal['none'] = fuzzy.trimf(seasonal.universe, [0, 0, 4])
+seasonal['medium'] = fuzzy.trimf(seasonal.universe, [3, 5, 8])
+seasonal['high'] = fuzzy.trimf(seasonal.universe, [7, 10, 10])
+
+discount['very_low'] = fuzzy.trimf(discount.universe, [0, 0, 5])
+discount['low'] = fuzzy.trimf(discount.universe, [0, 5, 12])
+discount['medium'] = fuzzy.trimf(discount.universe, [10, 15, 25])
+discount['high'] = fuzzy.trimf(discount.universe, [20, 35, 50])
+discount['very_high'] = fuzzy.trimf(discount.universe, [45, 55, 70])
+
+rules = [
+    ctrl.Rule(demand['high'] & pressure['low'] & margin['low'], discount['very_low']),
+    ctrl.Rule(demand['low'] & pressure['high'] & margin['high'], discount['high']),
+    ctrl.Rule(reputation['high'] & margin['medium'] & seasonal['high'], discount['medium']),
+    ctrl.Rule(pressure['high'] & seasonal['high'] & margin['high'], discount['very_high']),
+    ctrl.Rule(reputation['low'] & demand['medium'] & margin['low'], discount['medium']),
+    ctrl.Rule(demand['high'] & seasonal['none'] & pressure['low'], discount['low']),
+    ctrl.Rule(margin['high'] & pressure['medium'] & seasonal['medium'], discount['medium']),
+    ctrl.Rule(demand['high'] | margin['high'] | seasonal['high'], discount['medium'])]
+shopee_sim = ctrl.ControlSystemSimulation(ctrl.ControlSystem(rules))
+
+shopee_sim.input['demand'] = 85
+shopee_sim.input['pressure'] = 50
+shopee_sim.input['reputation'] = 4.2
+shopee_sim.input['margin'] = 90
+shopee_sim.input['seasonal'] = 10
+
+shopee_sim.compute()
+print(f"Kết quả giải mờ - Mức giảm giá đề xuất: {shopee_sim.output['discount']:.2f}%")
+discount.view(sim=shopee_sim)
+plt.show()
