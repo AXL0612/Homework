@@ -1,0 +1,94 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+demand           = ctrl.Antecedent(np.arange(0, 11, 1), 'demand')
+competitor_price = ctrl.Antecedent(np.arange(0, 11, 1), 'competitor_price')
+production_cost  = ctrl.Antecedent(np.arange(0, 11, 1), 'production_cost')
+seasonality      = ctrl.Antecedent(np.arange(0, 11, 1), 'seasonality')
+stock_level      = ctrl.Antecedent(np.arange(0, 11, 1), 'stock_level')
+final_price = ctrl.Consequent(np.arange(0, 101, 1), 'final_price')
+
+final_price['very_low']  = fuzz.trimf(final_price.universe, [0,  10, 20])
+final_price['low']       = fuzz.trimf(final_price.universe, [20, 30, 40])
+final_price['medium']    = fuzz.trimf(final_price.universe, [40, 50, 60])
+final_price['high']      = fuzz.trimf(final_price.universe, [60, 70, 80])
+final_price['very_high'] = fuzz.trimf(final_price.universe, [80, 90, 100])
+
+demand['poor']    = fuzz.trimf(demand.universe, [0, 0, 5])
+demand['average'] = fuzz.trimf(demand.universe, [0, 5, 10])
+demand['good']    = fuzz.trimf(demand.universe, [5, 10, 10])
+
+competitor_price['poor']    = fuzz.trimf(competitor_price.universe, [0, 0, 5])
+competitor_price['average'] = fuzz.trimf(competitor_price.universe, [0, 5, 10])
+competitor_price['good']    = fuzz.trimf(competitor_price.universe, [5, 10, 10])
+
+production_cost['poor']    = fuzz.trimf(production_cost.universe, [0, 0, 5])
+production_cost['average'] = fuzz.trimf(production_cost.universe, [0, 5, 10])
+production_cost['good']    = fuzz.trimf(production_cost.universe, [5, 10, 10])
+
+seasonality['poor']    = fuzz.trimf(seasonality.universe, [0, 0, 5])
+seasonality['average'] = fuzz.trimf(seasonality.universe, [0, 5, 10])
+seasonality['good']    = fuzz.trimf(seasonality.universe, [5, 10, 10])
+
+stock_level['poor']    = fuzz.trimf(stock_level.universe, [0, 0, 5])
+stock_level['average'] = fuzz.trimf(stock_level.universe, [0, 5, 10])
+stock_level['good']    = fuzz.trimf(stock_level.universe, [5, 10, 10])
+
+rules = [
+    ctrl.Rule(demand['good'] & competitor_price['good'] & stock_level['poor'],
+              final_price['very_high']),
+    ctrl.Rule(demand['good'] & seasonality['good'] & stock_level['poor'],
+              final_price['very_high']),
+    ctrl.Rule(demand['average'] & production_cost['good'] & stock_level['poor'],
+              final_price['very_high']),
+    ctrl.Rule(demand['good'] & competitor_price['average'] & stock_level['average'],
+              final_price['high']),
+    ctrl.Rule(demand['average'] & competitor_price['good'] & stock_level['poor'],
+              final_price['high']),
+    ctrl.Rule(demand['average'] & competitor_price['good'] & stock_level['average'],
+              final_price['high']),
+    ctrl.Rule(demand['good'] & seasonality['good'] & stock_level['average'],
+              final_price['high']),
+    ctrl.Rule(demand['average'] & competitor_price['average'] & stock_level['average'],
+              final_price['medium']),
+    ctrl.Rule(demand['poor'] & competitor_price['good'] & stock_level['average'],
+              final_price['medium']),
+    ctrl.Rule(demand['average'] & production_cost['average'] & stock_level['average'],
+              final_price['medium']),
+
+    ctrl.Rule(demand['poor'] & competitor_price['poor'] & stock_level['good'],
+              final_price['low']),
+    ctrl.Rule(demand['average'] & production_cost['poor'] & stock_level['good'],
+              final_price['low']),
+    ctrl.Rule(demand['poor'] & seasonality['poor'] & stock_level['good'],
+              final_price['low']),
+
+    ctrl.Rule(demand['poor'] & competitor_price['poor'] & stock_level['good'],
+              final_price['very_low']),
+    ctrl.Rule(demand['poor'] & seasonality['poor'] & stock_level['good'],
+              final_price['very_low']),
+    ctrl.Rule(demand['average'] & competitor_price['poor'] & stock_level['good'],
+              final_price['very_low'])]
+
+pricing_ctrl       = ctrl.ControlSystem(rules)
+pricing_simulation = ctrl.ControlSystemSimulation(pricing_ctrl)
+
+pricing_simulation.input['demand']           = 7
+pricing_simulation.input['competitor_price'] = 5
+pricing_simulation.input['production_cost']  = 6
+pricing_simulation.input['seasonality']      = 8
+pricing_simulation.input['stock_level']      = 4
+pricing_simulation.compute()
+
+print(f"  Đầu vào:")
+print(f"    • Mức cầu (demand)           : 7")
+print(f"    • Giá đối thủ (comp. price)  : 5")
+print(f"    • Chi phí sản xuất (prod.)   : 6")
+print(f"    • Tính mùa vụ (seasonality)  : 8")
+print(f"    • Mức tồn kho (stock level)  : 4")
+print(f"  Kết quả:")
+print(f"    • Giá cuối cùng (final price): {pricing_simulation.output['final_price']:.4f}")
+final_price.view(sim=pricing_simulation)
+plt.show()
