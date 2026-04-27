@@ -1,0 +1,59 @@
+import numpy as np
+import skfuzzy as fuzzy
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+rating = ctrl.Antecedent(np.arange(1, 5.1, 0.1), 'rating')
+sales = ctrl.Antecedent(np.arange(0, 1001, 1), 'sales')
+profit = ctrl.Antecedent(np.arange(0, 101, 1), 'profit')
+seasonal = ctrl.Antecedent(np.arange(0, 11, 1), 'seasonal')
+competitor = ctrl.Antecedent(np.arange(0, 101, 1), 'competitor')
+discount = ctrl.Consequent(np.arange(0, 71, 1), 'discount')
+
+rating['low'] = fuzzy.trimf(rating.universe, [1, 1, 4])
+rating['medium'] = fuzzy.trimf(rating.universe, [3.5, 4.2, 4.6])
+rating['high'] = fuzzy.trimf(rating.universe, [4.4, 5, 5])
+
+sales['low'] = fuzzy.trimf(sales.universe, [0, 0, 400])
+sales['medium'] = fuzzy.trimf(sales.universe, [300, 500, 800])
+sales['high'] = fuzzy.trimf(sales.universe, [700, 1000, 1000])
+
+profit['low'] = fuzzy.trimf(profit.universe, [0, 0, 40])
+profit['medium'] = fuzzy.trimf(profit.universe, [30, 50, 70])
+profit['high'] = fuzzy.trimf(profit.universe, [60, 100, 100])
+
+seasonal['none'] = fuzzy.trimf(seasonal.universe, [0, 0, 4])
+seasonal['moderate'] = fuzzy.trimf(seasonal.universe, [3, 5, 8])
+seasonal['high'] = fuzzy.trimf(seasonal.universe, [7, 10, 10])
+
+competitor['low'] = fuzzy.trimf(competitor.universe, [0, 0, 40])
+competitor['medium'] = fuzzy.trimf(competitor.universe, [30, 50, 70])
+competitor['high'] = fuzzy.trimf(competitor.universe, [60, 100, 100])
+
+discount['very_low'] = fuzzy.trimf(discount.universe, [0, 0, 10])
+discount['low'] = fuzzy.trimf(discount.universe, [5, 12, 20])
+discount['medium'] = fuzzy.trimf(discount.universe, [15, 25, 40])
+discount['high'] = fuzzy.trimf(discount.universe, [35, 50, 65])
+discount['very_high'] = fuzzy.trimf(discount.universe, [50, 60, 70])
+
+rule1 = ctrl.Rule(rating['high'] & sales['high'] & profit['high'], discount['high'])
+rule2 = ctrl.Rule(rating['low'] & sales['low'] & profit['high'], discount['high'])
+rule3 = ctrl.Rule(seasonal['high'] & competitor['high'], discount['very_high'])
+rule4 = ctrl.Rule(rating['medium'] & sales['medium'] & profit['medium'], discount['medium'])
+rule5 = ctrl.Rule(competitor['low'] & profit['low'] & sales['high'], discount['very_low'])
+rule6 = ctrl.Rule(rating['low'] & seasonal['none'], discount['medium'])
+rule7 = ctrl.Rule(sales['low'] & profit['low'], discount['very_high'])
+
+shopee_ctrl = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7])
+shopee_sim = ctrl.ControlSystemSimulation(shopee_ctrl)
+
+shopee_sim.input['rating'] = 4.2
+shopee_sim.input['sales'] = 200
+shopee_sim.input['profit'] = 10
+shopee_sim.input['seasonal'] = 9
+shopee_sim.input['competitor'] = 90
+
+shopee_sim.compute()
+print(f"Tỷ lệ chiết khấu đề xuất: {shopee_sim.output['discount']:.2f}%")
+discount.view(sim=shopee_sim)
+plt.show()
