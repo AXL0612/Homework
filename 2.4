@@ -1,0 +1,62 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+load   = ctrl.Antecedent(np.arange(0, 11, 1), 'load')
+dirt   = ctrl.Antecedent(np.arange(0, 11, 1), 'dirt')
+fabric = ctrl.Antecedent(np.arange(0, 11, 1), 'fabric')
+wash_time   = ctrl.Consequent(np.arange(0, 61, 1), 'wash_time')
+water_level = ctrl.Consequent(np.arange(0, 11, 1), 'water_level')
+
+load["small"]  = fuzz.trimf(load.universe, [0, 0, 5])
+load["medium"] = fuzz.trimf(load.universe, [3, 5, 8])
+load["large"]  = fuzz.trimf(load.universe, [6, 10, 10])
+fabric["light"]  = fuzz.trimf(fabric.universe, [0, 0, 5])
+fabric["normal"] = fuzz.trimf(fabric.universe, [3, 5, 8])
+fabric["heavy"]  = fuzz.trimf(fabric.universe, [6, 10, 10])
+dirt["low"]    = fuzz.trimf(dirt.universe, [0, 0, 5])
+dirt["medium"] = fuzz.trimf(dirt.universe, [3, 5, 8])
+dirt["high"]   = fuzz.trimf(dirt.universe, [6, 10, 10])
+wash_time["short"]  = fuzz.trimf(wash_time.universe, [0,  0,  20])
+wash_time["medium"] = fuzz.trimf(wash_time.universe, [15, 25, 45])
+wash_time["long"]   = fuzz.trimf(wash_time.universe, [40, 60, 60])
+water_level["low"]    = fuzz.trimf(water_level.universe, [0, 0, 5])
+water_level["medium"] = fuzz.trimf(water_level.universe, [3, 5, 8])
+water_level["high"]   = fuzz.trimf(water_level.universe, [6, 10, 10])
+
+rules = [
+    ctrl.Rule(load['small']  & dirt['low'],    (wash_time['short'],  water_level['low'])),
+    ctrl.Rule(load['small']  & dirt['medium'], (wash_time['medium'], water_level['medium'])),
+    ctrl.Rule(load['small']  & dirt['high'],   (wash_time['long'],   water_level['medium'])),
+    ctrl.Rule(load['medium'] & dirt['low'],    (wash_time['medium'], water_level['medium'])),
+    ctrl.Rule(load['medium'] & dirt['medium'], (wash_time['long'],   water_level['medium'])),
+    ctrl.Rule(load['medium'] & dirt['high'],   (wash_time['long'],   water_level['high'])),
+    ctrl.Rule(load['large']  & dirt['low'],    (wash_time['medium'], water_level['high'])),
+    ctrl.Rule(load['large']  & dirt['medium'], (wash_time['long'],   water_level['high'])),
+    ctrl.Rule(load['large']  & dirt['high'],   (wash_time['long'],   water_level['high'])),
+    ctrl.Rule(fabric['light'],  (wash_time['short'],  water_level['low'])),
+    ctrl.Rule(fabric['normal'], (wash_time['medium'], water_level['medium'])),
+    ctrl.Rule(fabric['heavy'],  (wash_time['long'],   water_level['high'])),
+    ctrl.Rule(load['large']  & dirt['high']   & fabric['heavy'], (wash_time['long'],  water_level['high'])),
+    ctrl.Rule(load['small']  & dirt['low']    & fabric['light'], (wash_time['short'], water_level['low'])),
+    ctrl.Rule(load['medium'] & dirt['medium'] & fabric['normal'],(wash_time['medium'],water_level['medium'])),]
+
+wash_ctrl = ctrl.ControlSystem(rules)
+wash_sim  = ctrl.ControlSystemSimulation(wash_ctrl)
+
+wash_sim.input['load']   = 7
+wash_sim.input['dirt']   = 8
+wash_sim.input['fabric'] = 5
+
+wash_sim.compute()
+print(f"  Đầu vào:")
+print(f"    • Khối lượng tải (load)   : 7")
+print(f"    • Mức độ bẩn (dirt)       : 8")
+print(f"    • Loại vải (fabric)       : 5")
+print(f"  Kết quả:")
+print("thoi gian giat:", wash_sim.output['wash_time'])
+print("luong nuoc:",     wash_sim.output['water_level'])
+wash_time.view(sim=wash_sim)
+water_level.view(sim=wash_sim)
+plt.show()
