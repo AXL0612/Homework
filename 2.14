@@ -1,0 +1,51 @@
+import numpy as np
+import skfuzzy as fuzzy
+from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
+
+density = ctrl.Antecedent(np.arange(0, 101, 1), 'density')
+urgency = ctrl.Antecedent(np.arange(0, 101, 1), 'urgency')
+load = ctrl.Antecedent(np.arange(0, 101, 1), 'load')
+traffic = ctrl.Antecedent(np.arange(0, 101, 1), 'traffic')
+profit = ctrl.Antecedent(np.arange(0, 101, 1), 'profit')
+combined_orders = ctrl.Consequent(np.arange(0, 11, 1), 'combined_orders')
+priority = ctrl.Consequent(np.arange(0, 101, 1), 'priority')
+
+for var in [density, urgency, load, traffic, profit]:
+    var['low'] = fuzzy.trimf(var.universe, [0, 0, 50])
+    var['medium'] = fuzzy.trimf(var.universe, [20, 50, 80])
+    var['high'] = fuzzy.trimf(var.universe, [50, 100, 100])
+
+combined_orders['few'] = fuzzy.trimf(combined_orders.universe, [0, 2, 5])
+combined_orders['some'] = fuzzy.trimf(combined_orders.universe, [2, 5, 8])
+combined_orders['many'] = fuzzy.trimf(combined_orders.universe, [5, 7, 10])
+
+priority['low'] = fuzzy.trimf(priority.universe, [0, 0, 50])
+priority['medium'] = fuzzy.trimf(priority.universe, [25, 50, 75])
+priority['high'] = fuzzy.trimf(priority.universe, [50, 100, 100])
+
+
+rules = [
+    ctrl.Rule(density['high'] & load['low'] & traffic['low'], combined_orders['many']),
+    ctrl.Rule(density['medium'] & traffic['high'] & urgency['medium'], combined_orders['some']),
+    ctrl.Rule(load['high'] & density['high'] & profit['medium'], combined_orders['some']),
+    ctrl.Rule(density['low'] & urgency['high'] & traffic['low'], combined_orders['some']),
+    ctrl.Rule(profit['high'] & urgency['high'] & traffic['high'], combined_orders['some']),
+    ctrl.Rule(urgency['high'] & profit['high'], priority['high']),
+    ctrl.Rule(urgency['medium'] & traffic['medium'], priority['medium']),
+    ctrl.Rule(urgency['low'] & profit['low'], priority['low'])]
+
+delivery_ctrl = ctrl.ControlSystem(rules)
+delivery_sim = ctrl.ControlSystemSimulation(delivery_ctrl)
+delivery_sim.input['density'] = 85    
+delivery_sim.input['urgency'] = 50    
+delivery_sim.input['load'] = 20       
+delivery_sim.input['traffic'] = 40  
+delivery_sim.input['profit'] = 60       
+
+delivery_sim.compute()
+
+print(f"Số lượng đơn hàng nên kết hợp: {delivery_sim.output['combined_orders']:.1f} đơn")
+print(f"Mức độ ưu tiên giao hàng: {delivery_sim.output['priority']:.2f}/100")
+combined_orders.view(sim=delivery_sim)
+plt.show()
