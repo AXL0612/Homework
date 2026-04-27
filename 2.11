@@ -28,8 +28,8 @@ weather['good'] = fuzzy.trimf(weather.universe, [6, 10, 10])
 
 price['low'] = fuzzy.trimf(price.universe, [0, 0, 30])
 price['medium'] = fuzzy.trimf(price.universe, [20, 50, 80])
-price['high'] = fuzzy.trimf(price.universe, [60, 85, 100])
-price['very_high'] = fuzzy.trimf(price.universe, [80, 100, 100])
+price['high'] = fuzzy.trimf(price.universe, [50, 70, 90])
+price['very_high'] = fuzzy.trimf(price.universe, [60, 80, 100])
 
 rules = [
     ctrl.Rule(distance['short'] & traffic['low'] & demand['low'], price['low']),
